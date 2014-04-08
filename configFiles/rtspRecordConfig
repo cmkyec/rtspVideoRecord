@@ -1,0 +1,30 @@
+{
+
+// !!!!!!!!!!
+// 此配置文件必须存储在程序所在目录的 configFiles 文件夹中
+// 且必须命名为 rtspRecordConfig
+// !!!!!!!!!!
+
+// 每天开始录像的时间，格式为 "小时:分钟"
+// 例如 "08:30" 表示每天8点30分开始录制一段录像
+// 每天开始录制的时间点可以动态增加或减少，只要符合 小时：分钟 的格式即可
+// !!! 小时和分必须都占据2个位置，不可以写成 "8:3", "08:3", "8:03"， 必须写成"08:03"
+"recordBeginTime": ["09:50", "12:00", "14:20"],
+
+// 每段录像的时间（单位：分钟）
+"recordLength": 1,
+
+// 每次录像的数目。实际中可能存在很多的视频源，每次录像时将每个视频源都录一段，
+// 将导致占用的空间太大。故在每个时间点录像时，从所有视频源中随机选择几个进行录像。
+// recordNumberEachTime 的值为3，表示在每个时间点随机选择3个视频源进行录像。
+"recordNumberEachTime": 1,
+
+// 视频源
+"rtspSource": {"K100": "/home/lijun/videos/video_198_10-39.src.mpg",
+	       "K101": "/home/lijun/videos/video_416_10-40.src.mpg",
+	       "K102": "/home/lijun/videos/video_429_10-39.src.mpg",
+	       "K103": "/home/lijun/videos/video_450_10-56.src.mpg",
+	       "K104": "/home/lijun/videos/video_453_10-56.src.mpg",
+               "K105": "/home/lijun/videos/video_455_10-56.src.mpg"}
+
+}
