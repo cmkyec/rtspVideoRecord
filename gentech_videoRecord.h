@@ -24,13 +24,12 @@ public:
 
 	int write(FILE* pFile);
 
-	int close();
+	void close();
 private:
 	AVFormatContext* m_pFormatCtx;
 	AVCodecContext* m_pCodecCtx;
 	AVCodec* m_pCodec;
 	int m_videoStreamIndex;
-	char m_errorMsg[256];
 };
 
 }

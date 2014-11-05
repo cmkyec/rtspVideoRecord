@@ -1,5 +1,6 @@
-#include "videoRecord.h"
+#include "gentech_videoRecord.h"
 #include "gentech_log.h"
+#include "gentech_utility.h"
 #include <string.h>
 
 namespace gentech
@@ -11,7 +12,6 @@ CVideoRecord::CVideoRecord()
 	m_pCodecCtx = NULL;
 	m_pCodec = NULL;
 	m_videoStreamIndex = -1;
-	memset(m_errorMsg, 0, sizeof(m_errorMsg));
 
 	av_register_all();
 	avformat_network_init();
@@ -31,9 +31,7 @@ int CVideoRecord::open(const char* pStreamPath)
 	if (ret != 0) {
 		av_strerror(ret, averrmsg, sizeof(averrmsg));
 		snprintf(loginfo, sizeof(loginfo), "avformat_open_input failed, stream path: %s, errmsg: %s.\n", pStreamPath, averrmsg);
-		gentech::logWrite(loginfo);
-		close();
-		return ret;
+		goto __failed;	
 	}
 
 	// find video stream index
@@ -47,8 +45,7 @@ int CVideoRecord::open(const char* pStreamPath)
 	if (m_videoStreamIndex == -1) {
 		memset(loginfo, 0, sizeof(loginfo));
 		snprintf(loginfo, sizeof(loginfo), "can not find video stream.\n");
-		close();
-		return -1;
+		goto __failed;
 	}
 	
 	// open the video decoder
@@ -58,9 +55,7 @@ int CVideoRecord::open(const char* pStreamPath)
 		memset(loginfo, 0, sizeof(loginfo));
 		sprintf(loginfo, "can not find a registerted decoder for codec id: %d.\n",
 			m_pCodecCtx->codec_id);
-		gentech::logWrite(loginfo);
-		close();
-		return -1;
+		goto __failed;
 	}
 	ret = avcodec_open2(m_pCodecCtx, m_pCodec, NULL);
 	if (ret < 0) {
@@ -68,12 +63,13 @@ int CVideoRecord::open(const char* pStreamPath)
 		av_strerror(ret, averrmsg, sizeof(averrmsg));
 		memset(loginfo, 0, sizeof(loginfo));
 		snprintf(loginfo, sizeof(loginfo), "avcodec_open2 failed, errmsg: %s.\n", averrmsg);
-		gentech::logWrite(loginfo);
-		close();
-		return ret;
+		goto __failed;
 	}
-
-	return 0;
+	return GENTECH_FUNC_SUCCEED;
+__failed:
+	gentech::logWrite(loginfo);
+	close();
+	return GENTECH_FUNC_FAILED;
 }
 
 int CVideoRecord::write(FILE* pFile)
@@ -88,14 +84,14 @@ int CVideoRecord::write(FILE* pFile)
 		char loginfo[500] = { 0 };
 		snprintf(loginfo, sizeof(loginfo), "av_read_frame failed, errmsg: %s.\n", averrmsg);
 		gentech::logWrite(loginfo);
-		return -1;
+		return GENTECH_FUNC_FAILED;
 	}
 	fwrite(pkt.data, sizeof(uint8_t), pkt.size, pFile);
 	av_free_packet(&pkt);
-	return 0;
+	return GENTECH_FUNC_SUCCEED;
 }
 
-int CVideoRecord::close()
+void CVideoRecord::close()
 {
 	if (m_pCodecCtx) {
 		avcodec_close(m_pCodecCtx);
@@ -106,7 +102,6 @@ int CVideoRecord::close()
 		av_close_input_file(m_pFormatCtx);
 		m_pFormatCtx = NULL;
 	}
-	memset(m_errorMsg, 0, sizeof(m_errorMsg));
 	m_videoStreamIndex = -1;
 }
 
